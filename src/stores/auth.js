@@ -4,7 +4,7 @@
     import axios from 'axios'
 
     // Define the base URL for your API calls
-    const API_BASE_URL = 'http://quiz.thecore.in';
+    const API_BASE_URL = 'https://quiz.thecore.in';
 
     export const useAuthStore = defineStore('auth', () => {
     const currentUser = ref(null)
