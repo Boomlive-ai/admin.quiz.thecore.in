@@ -42,18 +42,6 @@
             <option value="hard">Hard</option>
           </select>
         </div>
-<!-- 
-       
-        <div class="form-group">
-          <label for="quiz-duration">Duration (in minutes)</label>
-          <input
-            type="number"
-            id="quiz-duration"
-            v-model.number="quiz.quiz_duration"
-            placeholder="Enter duration"
-            required
-          />
-        </div> -->
 
         <!-- Single Question Input -->
         <div class="form-group">
@@ -69,7 +57,7 @@
 
         <!-- Clues Section -->
         <div class="clues-container">
-          <h3>Clues</h3>
+          <h3>Clues <span class="clue-counter">({{ clues.length }}/6)</span></h3>
           <div id="clues-wrapper">
             <div
               v-for="(clue, index) in clues"
@@ -106,9 +94,17 @@
               </div>
             </div>
           </div>
-          <button type="button" class="btn-add" @click="addClue">
+          <button 
+            type="button" 
+            class="btn-add" 
+            @click="addClue"
+            v-if="clues.length < 6"
+          >
             + Add Clue
           </button>
+          <div v-if="clues.length >= 6" class="max-clues-message">
+            Maximum limit of 6 clues reached
+          </div>
         </div>
 
         <!-- Quiz Answer Section -->
@@ -301,7 +297,9 @@ const quizAnswer = ref({
 
 // Add a new clue
 function addClue() {
-  clues.value.push({ title: '', text: '' })
+  if (clues.value.length < 6) {
+    clues.value.push({ title: '', text: '' })
+  }
 }
 
 // Remove a clue by index
@@ -358,18 +356,6 @@ function removeBulletPoint(sectionIndex, bulletIndex) {
     quizAnswer.value.sections[sectionIndex].bulletPoints.splice(bulletIndex, 1)
   }
 }
-
-// // Submit quiz (for demo, log the payload)
-// function submitQuiz() {
-//   const payload = {
-//     quiz: { ...quiz.value },
-//     clues: [...clues.value],
-//     quizAnswer: { ...quizAnswer.value }
-//   }
-//   console.log('Submitting Payload:', payload)
-//   alert('Quiz created successfully! (Check console for payload)')
-// }
-
 
 // Submit quiz using Axios
 async function submitQuiz() {
@@ -528,6 +514,12 @@ form {
   color: #333;
 }
 
+.clue-counter {
+  font-size: 16px;
+  color: #666;
+  font-weight: normal;
+}
+
 .clue-group {
   background: #f9f9f9;
   padding: 15px;
@@ -535,6 +527,13 @@ form {
   margin-bottom: 15px;
   position: relative;
   border: 1px solid #e0e0e0;
+}
+
+.max-clues-message {
+  color: #dc3545;
+  font-size: 14px;
+  margin-top: 10px;
+  font-style: italic;
 }
 
 /* Remove Clue Button */
