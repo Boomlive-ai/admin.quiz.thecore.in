@@ -164,7 +164,7 @@ const fetchQuizzes = async () => {
     loading.value = true
     try {
         const response = await axios.get(
-            'http://quiz.thecore.in/backend-dev/admin/quiz-history',
+            'https://quiz.thecore.in/backend-dev/admin/quiz-history',
             { withCredentials: true }
         )
         if (response.data.status === 'success') {
@@ -195,7 +195,7 @@ const formatDate = (dateString) => {
 const openQuizDetails = async (id) => {
     try {
         const response = await axios.get(
-            `http://quiz.thecore.in/backend-dev/admin/quiz-history/${id}`,
+            `https://quiz.thecore.in/backend-dev/admin/quiz-history/${id}`,
             { withCredentials: true }
         )
 
@@ -257,7 +257,7 @@ const deleteQuiz = async (id) => {
     if (confirm('Are you sure you want to delete this quiz history?')) {
         try {
             const response = await axios.delete(
-                `http://quiz.thecore.in/backend-dev/admin/quiz-history/delete/${id}`,
+                `https://quiz.thecore.in/backend-dev/admin/quiz-history/delete/${id}`,
                 { withCredentials: true }
             )
             if (response.data.status === 'success') {

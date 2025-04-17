@@ -405,7 +405,7 @@ async function submitQuiz() {
 
   try {
     const response = await axios.post(
-      'http://quiz.thecore.in/backend-dev/admin/quiz-history/create',
+      'https://quiz.thecore.in/backend-dev/admin/quiz-history/create',
       formData,
       { headers: { 'Content-Type': 'multipart/form-data' } }
     )
