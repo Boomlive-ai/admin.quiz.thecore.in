@@ -23,12 +23,12 @@
 
         <!-- Quiz Description -->
         <div class="form-group">
-          <label for="quiz-description">Quiz Description</label>
+          <label for="quiz-description">Quiz Hint</label>
           <textarea
             id="quiz-description"
             v-model="quiz.quiz_description"
             rows="4"
-            placeholder="Enter a brief description"
+            placeholder="Enter a hint for the quiz"
             required
           ></textarea>
         </div>
