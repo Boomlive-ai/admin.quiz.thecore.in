@@ -17,6 +17,9 @@
                         <p>Participants: {{ quiz.participants_count }}</p>
                     </div>
                     <div class="quiz-actions">
+                        <button @click.stop="editQuiz(quiz)" class="action-btn edit">
+                            Edit
+                        </button>
                         <button @click.stop="deleteQuiz(quiz.id)" class="action-btn delete">
                             Delete
                         </button>
@@ -71,13 +74,13 @@
                     </section>
 
                     <!-- Optional Chart Section (uncomment when needed)
-        <section class="chart-section">
-          <h3>Win/Loss Chart</h3>
-          <div class="chart-container">
-            <BarChart :chartData="chartData" :chartOptions="chartOptions" />
-          </div>
-        </section>
-        -->
+                    <section class="chart-section">
+                      <h3>Win/Loss Chart</h3>
+                      <div class="chart-container">
+                        <BarChart :chartData="chartData" :chartOptions="chartOptions" />
+                      </div>
+                    </section>
+                    -->
                 </div>
 
                 <!-- Modal Footer -->
@@ -86,12 +89,261 @@
                 </div>
             </div>
         </div>
+
+        <!-- Edit Quiz Modal -->
+        <div v-if="showEditModal" class="modal-overlay" @click="closeEditModal">
+            <div class="modal-content" @click.stop>
+                <!-- Modal Header -->
+                <div class="modal-header">
+                    <h2>Edit Quiz</h2>
+                    <button class="modal-close-btn" @click="closeEditModal">×</button>
+                </div>
+
+                <!-- Modal Body with edit form -->
+                <div class="modal-body">
+                    <form @submit.prevent="saveQuizChanges" class="edit-form">
+                        <!-- Read-only Information Section -->
+                        <div class="form-section">
+                            <h3>Quiz Information</h3>
+                            <div class="info-row">
+                                <span class="info-label">Quiz ID:</span>
+                                <span class="info-value">{{ editQuizData.id }}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Created Date:</span>
+                                <span class="info-value">{{ formatDate(editQuizData.created_at) }}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Participants Count:</span>
+                                <span class="info-value">{{ editQuizData.participants_count }}</span>
+                            </div>
+                        </div>
+
+                        <!-- Quiz Basic Settings Section -->
+                        <div class="form-section">
+                            <h3>Quiz Details</h3>
+
+                            <!-- Quiz Title -->
+                            <div class="form-group">
+                                <label for="quiz_title">Quiz Title:</label>
+                                <input type="text" id="quiz_title" v-model="editableQuizData.quiz_title"
+                                    class="form-control">
+                            </div>
+
+                            <!-- Quiz Description -->
+                            <div class="form-group">
+                                <label for="quiz_description">Quiz Hint:</label>
+                                <textarea id="quiz_description" v-model="editableQuizData.quiz_description"
+                                    class="form-control" rows="2"></textarea>
+                            </div>
+
+                            <!-- Quiz Difficulty -->
+                            <div class="form-group">
+                                <label for="quiz_difficulty">Difficulty Level:</label>
+                                <select id="quiz_difficulty" v-model="editableQuizData.quiz_difficulty"
+                                    class="form-control">
+                                    <option value="easy">Easy</option>
+                                    <option value="medium">Medium</option>
+                                    <option value="hard">Hard</option>
+                                </select>
+                            </div>
+
+                            <!-- Quiz Duration (optional)
+                            <div class="form-group">
+                                <label for="quiz_duration">Duration (minutes, optional):</label>
+                                <input type="number" id="quiz_duration" v-model="editableQuizData.quiz_duration"
+                                    class="form-control" min="1">
+                            </div> -->
+
+                            <!-- Quiz Question -->
+                            <div class="form-group">
+                                <label for="quiz_question">Main Question:</label>
+                                <textarea id="quiz_question" v-model="editableQuizData.quiz_question"
+                                    class="form-control" rows="3"></textarea>
+                            </div>
+                        </div>
+
+                        <!-- Clues Section -->
+                        <div class="form-section">
+                            <h3>Clues</h3>
+                            <div v-if="editableQuizData.clues.length === 0" class="no-items-message">
+                                No clues added yet.
+                            </div>
+                            <div v-for="(clue, index) in editableQuizData.clues" :key="index" class="item-card">
+                                <div class="item-header">
+                                    <h4>Clue {{ index + 1 }}</h4>
+                                    <button type="button" @click="removeClue(index)" class="remove-btn">
+                                        Remove
+                                    </button>
+                                </div>
+
+                                <!-- Clue Title -->
+                                <div class="form-group">
+                                    <label :for="`clue_title_${index}`">Title:</label>
+                                    <input :id="`clue_title_${index}`" v-model="clue.title" class="form-control">
+                                </div>
+
+                                <!-- Clue Text -->
+                                <div class="form-group">
+                                    <label :for="`clue_text_${index}`">Text:</label>
+                                    <textarea :id="`clue_text_${index}`" v-model="clue.text" class="form-control"
+                                        rows="3"></textarea>
+                                </div>
+                            </div>
+
+                            <button type="button" @click="addClue" class="add-btn">
+                                Add Clue
+                            </button>
+                        </div>
+
+                        <!-- Quiz Answer Section -->
+                        <div class="form-section">
+                            <h3>Quiz Answer</h3>
+
+                            <!-- Answer Name -->
+                            <div class="form-group">
+                                <label for="answer_name">Name:</label>
+                                <input id="answer_name" v-model="editableQuizData.quiz_answer.name"
+                                    class="form-control">
+                            </div>
+
+                            <!-- Answer Timeline -->
+                            <div class="form-group">
+                                <label for="answer_timeline">Timeline:</label>
+                                <input id="answer_timeline" v-model="editableQuizData.quiz_answer.timeline"
+                                    class="form-control">
+                            </div>
+
+                            <!-- Answer Description -->
+                            <div class="form-group">
+                                <label for="answer_description">Description:</label>
+                                <textarea id="answer_description" v-model="editableQuizData.quiz_answer.description"
+                                    class="form-control" rows="4"></textarea>
+                            </div>
+
+                            <!-- Result Photo Upload -->
+                            <!-- Result Photo Upload -->
+                            <div class="form-group file-upload-group">
+                                <label for="result_photo">Result Photo:</label>
+                                <div class="file-upload-container">
+                                    <input type="file" id="result_photo" ref="resultPhotoInput"
+                                        @change="handleFileChange" class="file-input" accept="image/*">
+                                    <div class="file-upload-ui">
+                                        <div class="file-upload-preview" v-if="imagePreview || currentPhotoUrl">
+                                            <img :src="imagePreview || currentPhotoUrl" alt="Result preview"
+                                                class="preview-image">
+                                            <button type="button" @click="removeImage" class="remove-image-btn"
+                                                aria-label="Remove image">
+                                                <span class="remove-icon">×</span>
+                                            </button>
+                                        </div>
+                                        <div class="file-upload-controls" v-if="!imagePreview && !currentPhotoUrl">
+                                            <div class="upload-icon">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                                    viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7">
+                                                    </path>
+                                                    <line x1="16" y1="5" x2="22" y2="5"></line>
+                                                    <line x1="19" y1="2" x2="19" y2="8"></line>
+                                                    <circle cx="9" cy="9" r="2"></circle>
+                                                    <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path>
+                                                </svg>
+                                            </div>
+                                            <span class="upload-text">Drag & drop an image or</span>
+                                            <button type="button" class="browse-btn" @click="triggerFileInput">Browse
+                                                files</button>
+                                        </div>
+                                        <div class="file-info" v-if="selectedFile && !imagePreview">
+                                            <span>{{ selectedFile.name }}</span>
+                                            <span class="file-size">{{ formatFileSize(selectedFile.size) }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Answer Sections -->
+                            <div class="subsection">
+                                <h4>Sections</h4>
+                                <div v-if="editableQuizData.quiz_answer.sections.length === 0" class="no-items-message">
+                                    No sections added yet.
+                                </div>
+                                <div v-for="(section, sIndex) in editableQuizData.quiz_answer.sections" :key="sIndex"
+                                    class="item-card">
+                                    <div class="item-header">
+                                        <h4>Section {{ sIndex + 1 }}</h4>
+                                        <button type="button" @click="removeSection(sIndex)" class="remove-btn">
+                                            Remove
+                                        </button>
+                                    </div>
+
+                                    <!-- Section Title -->
+                                    <div class="form-group">
+                                        <label :for="`section_title_${sIndex}`">Title:</label>
+                                        <input :id="`section_title_${sIndex}`" v-model="section.title"
+                                            class="form-control">
+                                    </div>
+
+                                    <!-- Section Input Type -->
+                                    <div class="form-group">
+                                        <label :for="`section_input_type_${sIndex}`">Input Type:</label>
+                                        <select :id="`section_input_type_${sIndex}`" v-model="section.inputType"
+                                            class="form-control">
+                                            <option value="bullet">Bullet Points</option>
+                                            <option value="paragraph">Description</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Section Description -->
+                                    <div class="form-group" v-if="section.inputType !== 'bullet'">
+                                        <label :for="`section_description_${sIndex}`">Description:</label>
+                                        <textarea :id="`section_description_${sIndex}`" v-model="section.description"
+                                            class="form-control" rows="2"></textarea>
+                                    </div>
+
+                                    <!-- Bullet Points (if input type is bullet) -->
+                                    <div v-if="section.inputType === 'bullet'" class="bullet-points-container">
+                                        <label>Bullet Points:</label>
+                                        <div v-for="(point, pIndex) in section.bulletPoints" :key="pIndex"
+                                            class="bullet-point-row">
+                                            <input :id="`bullet_point_${sIndex}_${pIndex}`"
+                                                v-model="section.bulletPoints[pIndex]" class="form-control"
+                                                placeholder="Enter bullet point text">
+                                            <button type="button" @click="removeBulletPoint(sIndex, pIndex)"
+                                                class="small-remove-btn" v-if="section.bulletPoints.length > 1">
+                                                ×
+                                            </button>
+                                        </div>
+                                        <button type="button" @click="addBulletPoint(sIndex)" class="add-small-btn">
+                                            Add Point
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <button type="button" @click="addSection" class="add-btn">
+                                    Add Section
+                                </button>
+                            </div>
+                        </div>
+
+                        <div v-if="validationError" class="validation-error">
+                            {{ validationError }}
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="modal-footer">
+                    <button type="button" class="secondary-btn" @click="closeEditModal">Cancel</button>
+                    <button type="button" class="primary-btn" @click="saveQuizChanges">Save Changes</button>
+                </div>
+            </div>
+        </div>
     </div>
 </template>
 
-
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import axios from 'axios'
 import { useAuthStore } from '../stores/auth'
 import { Bar } from 'vue-chartjs'
@@ -138,6 +390,37 @@ const loading = ref(true)
 // For quiz details modal
 const showDetailsModal = ref(false)
 const selectedQuiz = ref({ id: '', created_at: '', participants_count: 0, stats: {} })
+
+// For edit quiz modal
+const showEditModal = ref(false)
+const editQuizData = ref({
+    id: '',
+    created_at: '',
+    participants_count: 0
+})
+// File upload related states
+const selectedFile = ref(null)
+const imagePreview = ref('')
+const currentPhotoUrl = ref('')
+const resultPhotoInput = ref(null)
+// Editable quiz data structured to match the actual quiz_data format
+const editableQuizData = ref({
+    quiz_title: '',
+    quiz_description: '',
+    quiz_difficulty: 'easy',
+    quiz_duration: null,
+    quiz_question: '',
+    clues: [],
+    quiz_answer: {
+        name: '',
+        timeline: '',
+        description: '',
+        photo: '',
+        sections: []
+    }
+})
+
+const validationError = ref('')
 
 // Chart data and options (dummy example)
 const chartData = ref({
@@ -247,7 +530,7 @@ const openQuizDetails = async (id) => {
     }
 }
 
-// Close modal
+// Close details modal
 const closeDetailsModal = () => {
     showDetailsModal.value = false
 }
@@ -273,6 +556,346 @@ const deleteQuiz = async (id) => {
     }
 }
 
+// Format file size to human-readable format
+const formatFileSize = (bytes) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+};
+
+// Trigger file input click
+const triggerFileInput = () => {
+    if (resultPhotoInput.value) {
+        resultPhotoInput.value.click();
+    }
+};
+
+// Handle file drop
+const handleFileDrop = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    if (event.dataTransfer.files && event.dataTransfer.files.length > 0) {
+        const file = event.dataTransfer.files[0];
+        
+        // Check if file is an image
+        if (file.type.startsWith('image/')) {
+            selectedFile.value = file;
+            
+            // Create preview
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                imagePreview.value = e.target.result;
+            };
+            reader.readAsDataURL(file);
+            
+            // Clear current photo URL
+            currentPhotoUrl.value = '';
+        } else {
+            alert('Please upload an image file.');
+        }
+    }
+};
+
+// Handle file selection
+const handleFileChange = (event) => {
+    const file = event.target.files[0];
+    if (file) {
+        if (file.type.startsWith('image/')) {
+            selectedFile.value = file;
+            
+            // Create preview of the selected image
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                imagePreview.value = e.target.result;
+            };
+            reader.readAsDataURL(file);
+            
+            // Remove the current photo reference if there was one
+            currentPhotoUrl.value = '';
+        } else {
+            alert('Please upload an image file.');
+            if (resultPhotoInput.value) {
+                resultPhotoInput.value.value = '';
+            }
+        }
+    }
+};
+
+// Remove selected image
+const removeImage = () => {
+    selectedFile.value = null;
+    imagePreview.value = '';
+    currentPhotoUrl.value = '';
+    if (resultPhotoInput.value) {
+        resultPhotoInput.value.value = '';
+    }
+    // Also clear the photo path in the editable data
+    editableQuizData.value.quiz_answer.photo = '';
+};
+
+
+// Edit quiz function
+const editQuiz = async (quiz) => {
+    try {
+        // Reset file-related states
+        selectedFile.value = null
+        imagePreview.value = ''
+        currentPhotoUrl.value = ''
+
+        // Fetch full quiz details to ensure we have all data
+        const response = await axios.get(
+            `https://quiz.thecore.in/backend-dev/admin/quiz-history/${quiz.id}`,
+            { withCredentials: true }
+        )
+
+        if (response.data.status === 'success') {
+            const quizData = response.data.data
+
+            // Set non-editable quiz data
+            editQuizData.value = {
+                id: quizData.id,
+                created_at: quizData.created_at,
+                participants_count: quizData.participants_count
+            }
+
+            // Parse quiz_data JSON
+            let parsedQuizData = {}
+            try {
+                parsedQuizData = typeof quizData.quiz_data === 'string'
+                    ? JSON.parse(quizData.quiz_data)
+                    : quizData.quiz_data
+            } catch (e) {
+                console.error('Error parsing quiz data:', e)
+                parsedQuizData = {}
+            }
+
+            // Set up editable data structure
+            parseQuizDataForEdit(parsedQuizData)
+
+            // If there's a photo, set the currentPhotoUrl
+            if (editableQuizData.value.quiz_answer.photo) {
+                currentPhotoUrl.value = `https://quiz.thecore.in/backend-dev/${editableQuizData.value.quiz_answer.photo}`
+            }
+
+            // Show edit modal
+            showEditModal.value = true
+        } else {
+            alert('Failed to fetch quiz details for editing: ' + response.data.message)
+        }
+    } catch (error) {
+        console.error('Error preparing quiz for edit:', error)
+        alert('Error preparing quiz for edit.')
+    }
+}
+
+// Parse quiz data for editing
+const parseQuizDataForEdit = (data) => {
+    // Initialize with defaults or existing values
+    editableQuizData.value = {
+        quiz_title: data.quiz_title || '',
+        quiz_description: data.quiz_description || '',
+        quiz_difficulty: data.quiz_difficulty || 'easy',
+        quiz_duration: data.quiz_duration,
+        quiz_question: data.quiz_question || '',
+        clues: Array.isArray(data.clues) ? [...data.clues] : [],
+        quiz_answer: {
+            name: data.quiz_answer?.name || '',
+            timeline: data.quiz_answer?.timeline || '',
+            description: data.quiz_answer?.description || '',
+            photo: data.quiz_answer?.photo || '',
+            sections: Array.isArray(data.quiz_answer?.sections)
+                ? data.quiz_answer.sections.map(section => {
+                    // Determine input type based on content
+                    let inputType = 'bullet'; // Default
+                    
+                    // If description has content and bulletPoints is empty or doesn't exist
+                    if (section.description && section.description.trim() && 
+                        (!Array.isArray(section.bulletPoints) || section.bulletPoints.length === 0 || 
+                         (section.bulletPoints.length === 1 && !section.bulletPoints[0].trim()))) {
+                        inputType = 'paragraph';
+                    }
+                    // If bulletPoints has content
+                    else if (Array.isArray(section.bulletPoints) && section.bulletPoints.some(point => point.trim())) {
+                        inputType = 'bullet';
+                    }
+                    
+                    return {
+                        title: section.title || '',
+                        inputType: inputType,
+                        description: section.description || '',
+                        bulletPoints: Array.isArray(section.bulletPoints) ? [...section.bulletPoints] : ['']
+                    }
+                })
+                : []
+        }
+    }
+
+    // If no clues, initialize with empty array
+    if (!editableQuizData.value.clues.length) {
+        editableQuizData.value.clues = []
+    }
+
+    // If no sections, initialize with empty array
+    if (!editableQuizData.value.quiz_answer.sections.length) {
+        editableQuizData.value.quiz_answer.sections = []
+    }
+}
+// Add a new clue
+const addClue = () => {
+    editableQuizData.value.clues.push({
+        title: '',
+        text: ''
+    })
+}
+
+// Remove a clue
+const removeClue = (index) => {
+    editableQuizData.value.clues.splice(index, 1)
+}
+
+// Add a new section to the answer
+const addSection = () => {
+    editableQuizData.value.quiz_answer.sections.push({
+        title: '',
+        inputType: 'bullet',
+        description: '',
+        bulletPoints: ['']
+    })
+}
+
+// Remove a section
+const removeSection = (index) => {
+    editableQuizData.value.quiz_answer.sections.splice(index, 1)
+}
+
+// Add a bullet point to a section
+const addBulletPoint = (sectionIndex) => {
+    editableQuizData.value.quiz_answer.sections[sectionIndex].bulletPoints.push('')
+}
+
+// Remove a bullet point
+const removeBulletPoint = (sectionIndex, pointIndex) => {
+    editableQuizData.value.quiz_answer.sections[sectionIndex].bulletPoints.splice(pointIndex, 1)
+}
+// Close edit modal
+const closeEditModal = () => {
+    showEditModal.value = false
+    validationError.value = ''
+    // Reset file related states
+    selectedFile.value = null
+    imagePreview.value = ''
+    currentPhotoUrl.value = ''
+}
+// Save quiz changes
+const saveQuizChanges = async () => {
+    validationError.value = ''
+
+    // Validate form data
+    if (!validateQuizData()) {
+        return
+    }
+
+    try {
+        // Prepare form data for submission
+        const formData = new FormData()
+
+        // Get the current quiz data
+        const response = await axios.get(
+            `https://quiz.thecore.in/backend-dev/admin/quiz-history/${editQuizData.value.id}`,
+            { withCredentials: true }
+        )
+
+        if (response.data.status === 'success') {
+            const originalData = response.data.data
+            let quizDataCopy = { ...editableQuizData.value }
+
+            // Handle photo separately
+            if (selectedFile.value) {
+                formData.append('result_photo', selectedFile.value)
+                // The backend will handle storing the path, so we don't need to set it here
+            } else if (!currentPhotoUrl.value && editableQuizData.value.quiz_answer.photo) {
+                // User removed the existing photo
+                quizDataCopy.quiz_answer.photo = ''
+            }
+
+            // Stringify the updated quiz data
+            formData.append('quiz_data', JSON.stringify(quizDataCopy))
+
+            // Append existing data that shouldn't be changed
+            formData.append('quiz_results', originalData.quiz_results || '{}')
+            formData.append('participants_ids', originalData.participants_ids || '[]')
+            formData.append('participants_count', originalData.participants_count)
+
+            // Send update request
+            const updateResponse = await axios.post(
+                `https://quiz.thecore.in/backend-dev/admin/quiz-history/update/${editQuizData.value.id}`,
+                formData,
+                {
+                    withCredentials: true,
+                    headers: {
+                        'Content-Type': 'multipart/form-data'
+                    }
+                }
+            )
+
+            if (updateResponse.data.status === 'success') {
+                // Update local quiz data
+                fetchQuizzes()
+                alert('Quiz updated successfully!')
+                closeEditModal()
+            } else {
+                validationError.value = 'Failed to save: ' + updateResponse.data.message
+            }
+        } else {
+            validationError.value = 'Failed to retrieve original quiz data: ' + response.data.message
+        }
+    } catch (error) {
+        console.error('Error updating quiz:', error)
+        validationError.value = 'Error updating quiz: ' + error.message
+    }
+}
+
+// Validate quiz data before submission
+const validateQuizData = () => {
+    // Required fields validation
+    if (!editableQuizData.value.quiz_title.trim()) {
+        validationError.value = 'Quiz title is required.'
+        return false
+    }
+
+    if (!editableQuizData.value.quiz_question.trim()) {
+        validationError.value = 'Quiz question is required.'
+        return false
+    }
+
+    // Validate quiz answer
+    if (!editableQuizData.value.quiz_answer.name.trim()) {
+        validationError.value = 'Answer name is required.'
+        return false
+    }
+
+    // Validate sections if they exist
+    for (let i = 0; i < editableQuizData.value.quiz_answer.sections.length; i++) {
+        const section = editableQuizData.value.quiz_answer.sections[i]
+
+        if (!section.title.trim()) {
+            validationError.value = `Section ${i + 1} title is required.`
+            return false
+        }
+
+        // If bullet points, ensure at least one is provided
+        if (section.inputType === 'bullet' &&
+            (!section.bulletPoints.length || !section.bulletPoints.some(p => p.trim()))) {
+            validationError.value = `Section ${i + 1} must have at least one bullet point.`
+            return false
+        }
+    }
+
+    return true
+}
 onMounted(() => {
     authStore.checkAuth().then(() => {
         if (authStore.isAuthenticated) {
@@ -281,6 +904,31 @@ onMounted(() => {
             alert('Not authenticated. Please log in again.')
         }
     })
+    const fileDropArea = document.querySelector('.file-upload-ui');
+    if (fileDropArea) {
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            fileDropArea.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+            }, false);
+        });
+        
+        fileDropArea.addEventListener('dragover', () => {
+            fileDropArea.classList.add('file-drag-over');
+        }, false);
+        
+        fileDropArea.addEventListener('dragleave', () => {
+            fileDropArea.classList.remove('file-drag-over');
+        }, false);
+        
+        fileDropArea.addEventListener('drop', handleFileDrop, false);
+        
+        fileDropArea.addEventListener('click', (e) => {
+            if (!e.target.closest('.remove-image-btn') && !imagePreview.value && !currentPhotoUrl.value) {
+                triggerFileInput();
+            }
+        }, false);
+    }
 })
 </script>
 
@@ -361,6 +1009,7 @@ h1 {
 .quiz-actions {
     display: flex;
     justify-content: flex-end;
+    gap: 10px;
 }
 
 .action-btn {
@@ -370,6 +1019,15 @@ h1 {
     font-size: 14px;
     font-weight: 500;
     cursor: pointer;
+}
+
+.action-btn.edit {
+    background-color: #2196F3;
+    color: #fff;
+}
+
+.action-btn.edit:hover {
+    background-color: #1976D2;
 }
 
 .action-btn.delete {
@@ -401,6 +1059,8 @@ h1 {
     border-radius: 8px;
     width: 90%;
     max-width: 750px;
+    max-height: 90vh;
+    overflow-y: auto;
     box-shadow: 0 6px 20px rgba(0, 43, 69, 0.2);
     position: relative;
 }
@@ -412,6 +1072,10 @@ h1 {
     align-items: center;
     padding: 15px 30px;
     border-bottom: 1px solid #e0e0e0;
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 10;
 }
 
 .modal-header h2 {
@@ -471,6 +1135,13 @@ h1 {
     padding: 15px 30px;
     border-top: 1px solid #e0e0e0;
     text-align: right;
+    position: sticky;
+    bottom: 0;
+    background: white;
+    z-index: 10;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
 }
 
 .close-btn {
@@ -483,33 +1154,365 @@ h1 {
     cursor: pointer;
 }
 
+/* Edit Form Styling */
+.edit-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.form-group label {
+    font-weight: 600;
+    color: #004d40;
+    margin-top: 10px;
+}
+
+.form-control {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: 16px;
+}
+
+.json-editor {
+    font-family: monospace;
+    white-space: pre;
+    resize: vertical;
+    min-height: 100px;
+}
+
+.text-muted {
+    color: #757575;
+    font-size: 14px;
+}
+
+.validation-error {
+    color: #c62828;
+    background-color: #ffebee;
+    padding: 10px;
+    border-radius: 4px;
+    margin-top: 10px;
+}
+
+.primary-btn {
+    background: #004d40;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    font-size: 16px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.secondary-btn {
+    background: #e0e0e0;
+    color: #333;
+    border: none;
+    padding: 10px 20px;
+    font-size: 16px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+/* Form Section Styles */
+.form-section {
+    margin-bottom: 25px;
+    padding: 20px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.form-section h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: #004d40;
+    font-size: 18px;
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 8px;
+}
+
+.subsection {
+    margin-top: 20px;
+}
+
+.subsection h4 {
+    color: #004d40;
+    font-size: 16px;
+    margin-bottom: 10px;
+}
+
+/* Item Card Styles */
+.item-card {
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    padding: 15px;
+    margin-bottom: 15px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.item-header h4 {
+    margin: 0;
+    color: #004d40;
+    font-size: 16px;
+}
+
+.no-items-message {
+    color: #757575;
+    font-style: italic;
+    margin-bottom: 10px;
+}
+
+/* Bullet Points Container */
+.bullet-points-container {
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.bullet-point-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+/* Button Styles */
+.add-btn {
+    background-color: #26a69a;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 12px;
+    font-size: 14px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+.add-btn:hover {
+    background-color: #00897b;
+}
+
+.add-small-btn {
+    background-color: #26a69a;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 5px 10px;
+    font-size: 12px;
+    cursor: pointer;
+    margin-top: 5px;
+}
+
+.add-small-btn:hover {
+    background-color: #00897b;
+}
+
+.remove-btn {
+    background-color: #ef5350;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 5px 10px;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.remove-btn:hover {
+    background-color: #d32f2f;
+}
+
+.small-remove-btn {
+    background-color: #ef5350;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.small-remove-btn:hover {
+    background-color: #d32f2f;
+}
+
+/* Info Row Styles */
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 5px 0;
+}
+
+.info-label {
+    font-weight: 600;
+    color: #333;
+}
+
+.info-value {
+    color: #555;
+}
+/* File Upload Styling */
+.file-upload-group {
+    margin-bottom: 24px;
+}
+
+.file-upload-container {
+    position: relative;
+    width: 100%;
+}
+
+.file-input {
+    position: absolute;
+    width: 0.1px;
+    height: 0.1px;
+    opacity: 0;
+    overflow: hidden;
+    z-index: -1;
+}
+
+.file-upload-ui {
+    border: 2px dashed #26a69a;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    background-color: #f0f7f6;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.file-upload-ui:hover {
+    border-color: #004d40;
+    background-color: #e0f2f1;
+}
+
+.file-upload-controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.upload-icon {
+    color: #26a69a;
+    margin-bottom: 12px;
+}
+
+.upload-text {
+    color: #555;
+    margin-bottom: 12px;
+    font-size: 16px;
+}
+
+.browse-btn {
+    background-color: #26a69a;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 16px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.browse-btn:hover {
+    background-color: #004d40;
+}
+
+.file-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 12px;
+    color: #004d40;
+    font-size: 14px;
+}
+
+.file-size {
+    color: #666;
+    font-size: 12px;
+    margin-top: 4px;
+}
+
+.file-upload-preview {
+    position: relative;
+    width: 100%;
+    max-height: 300px;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+}
+
+.preview-image {
+    max-width: 100%;
+    max-height: 300px;
+    object-fit: contain;
+    border-radius: 4px;
+}
+
+.remove-image-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: rgba(0, 0, 0, 0.6);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.remove-image-btn:hover {
+    background-color: rgba(0, 0, 0, 0.8);
+}
+
+.remove-icon {
+    font-size: 20px;
+    line-height: 1;
+}
+/* Validation Error */
+.validation-error {
+    color: #c62828;
+    background-color: #ffebee;
+    padding: 10px;
+    border-radius: 4px;
+    margin-top: 10px;
+}
+.file-drag-over {
+    border-color: #004d40;
+    background-color: #e0f2f1;
+    box-shadow: 0 0 10px rgba(0, 77, 64, 0.2);
+}
 /* Responsive Tweaks */
 @media (min-width: 768px) {
     .modal-content {
         width: 80%;
     }
-}
 
-.chart-container {
-    margin-top: 20px;
-    position: relative;
-    height: 300px;
-    /* Define a fixed height for the chart */
-}
-
-.close-btn {
-    background: #004d40;
-    color: #fff;
-    border: none;
-    padding: 10px 20px;
-    font-size: 16px;
-    border-radius: 5px;
-    cursor: pointer;
-    margin-top: 20px;
-}
-
-/* Responsive Tweaks */
-@media (min-width: 768px) {
     .quiz-list {
         grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
     }
