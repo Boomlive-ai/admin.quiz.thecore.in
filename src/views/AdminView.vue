@@ -250,7 +250,7 @@
                                                     <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path>
                                                 </svg>
                                             </div>
-                                            <span class="upload-text">Click to upload an image</span>
+                                            <span class="upload-text">Click on browse to upload an image</span>
                                             <button type="button" class="browse-btn" @click="triggerFileInput">Browse
                                                 files</button>
                                         </div>
