@@ -12,25 +12,14 @@
         <!-- Quiz Title -->
         <div class="form-group">
           <label for="quiz-title">Quiz Title</label>
-          <input
-            type="text"
-            id="quiz-title"
-            v-model="quiz.quiz_title"
-            placeholder="Enter quiz title"
-            required
-          />
+          <input type="text" id="quiz-title" v-model="quiz.quiz_title" placeholder="Enter quiz title" required />
         </div>
 
         <!-- Quiz Description -->
         <div class="form-group">
           <label for="quiz-description">Quiz Hint</label>
-          <textarea
-            id="quiz-description"
-            v-model="quiz.quiz_description"
-            rows="4"
-            placeholder="Enter a hint for the quiz"
-            required
-          ></textarea>
+          <textarea id="quiz-description" v-model="quiz.quiz_description" rows="4"
+            placeholder="Enter a hint for the quiz" required></textarea>
         </div>
 
         <!-- Difficulty Level -->
@@ -42,64 +31,40 @@
             <option value="hard">Hard</option>
           </select>
         </div>
-
+        <!-- Points Field -->
+        <div class="form-group">
+          <label for="quiz-points">Points</label>
+          <input type="number" id="quiz-points" v-model.number="quiz.quiz_points" placeholder="Enter points value"
+            min="0" required />
+        </div>
         <!-- Single Question Input -->
         <div class="form-group">
           <label for="quiz-question">Quiz Question</label>
-          <input
-            type="text"
-            id="quiz-question"
-            v-model="quiz.quiz_question"
-            placeholder="Enter the quiz question"
-            required
-          />
+          <input type="text" id="quiz-question" v-model="quiz.quiz_question" placeholder="Enter the quiz question"
+            required />
         </div>
 
         <!-- Clues Section -->
         <div class="clues-container">
           <h3>Clues <span class="clue-counter">({{ clues.length }}/6)</span></h3>
           <div id="clues-wrapper">
-            <div
-              v-for="(clue, index) in clues"
-              :key="index"
-              class="clue-group"
-            >
+            <div v-for="(clue, index) in clues" :key="index" class="clue-group">
               <!-- Only show remove button if there's more than one clue -->
-              <button
-                v-if="clues.length > 1"
-                type="button"
-                class="remove-clue-btn"
-                @click="removeClue(index)"
-                title="Remove Clue"
-              >
+              <button v-if="clues.length > 1" type="button" class="remove-clue-btn" @click="removeClue(index)"
+                title="Remove Clue">
                 &times;
               </button>
               <div class="form-group">
                 <label>Clue Title</label>
-                <input
-                  type="text"
-                  v-model="clue.title"
-                  placeholder="Enter clue title"
-                  required
-                />
+                <input type="text" v-model="clue.title" placeholder="Enter clue title" required />
               </div>
               <div class="form-group">
                 <label>Clue</label>
-                <input
-                  type="text"
-                  v-model="clue.text"
-                  placeholder="Enter clue"
-                  required
-                />
+                <input type="text" v-model="clue.text" placeholder="Enter clue" required />
               </div>
             </div>
           </div>
-          <button 
-            type="button" 
-            class="btn-add" 
-            @click="addClue"
-            v-if="clues.length < 6"
-          >
+          <button type="button" class="btn-add" @click="addClue" v-if="clues.length < 6">
             + Add Clue
           </button>
           <div v-if="clues.length >= 6" class="max-clues-message">
@@ -114,13 +79,8 @@
           <!-- Photo Upload (Custom Styled) -->
           <div class="form-group file-upload-group">
             <div class="upload-button-wrapper">
-              <input
-                type="file"
-                id="answer-photo"
-                accept="image/*"
-                @change="onPhotoSelected"
-              />
-              <label  v-if="!quizAnswer.photoPreview" for="answer-photo" class="custom-file-upload">
+              <input type="file" id="answer-photo" accept="image/*" @change="onPhotoSelected" />
+              <label v-if="!quizAnswer.photoPreview" for="answer-photo" class="custom-file-upload">
                 <i class="upload-icon">+</i>
                 <span>Upload a photo related to the topic</span>
               </label>
@@ -135,63 +95,36 @@
           <!-- Name or Title (Person/Company) -->
           <div class="form-group">
             <label for="answer-name">Name / Title</label>
-            <input
-              type="text"
-              id="answer-name"
-              v-model="quizAnswer.name"
-              placeholder="e.g. G. R. Gopinath / Air Deccan"
-            />
+            <input type="text" id="answer-name" v-model="quizAnswer.name"
+              placeholder="e.g. G. R. Gopinath / Air Deccan" />
           </div>
 
           <!-- Timeline -->
           <div class="form-group">
             <label for="answer-timeline">Timeline</label>
-            <input
-              type="text"
-              id="answer-timeline"
-              v-model="quizAnswer.timeline"
-              placeholder="e.g. 1951 – Present"
-            />
+            <input type="text" id="answer-timeline" v-model="quizAnswer.timeline" placeholder="e.g. 1951 – Present" />
           </div>
 
           <!-- Brief Description -->
           <div class="form-group">
             <label for="answer-description">Brief Description</label>
-            <textarea
-              id="answer-description"
-              v-model="quizAnswer.description"
-              rows="4"
-              placeholder="Short bio or background"
-            ></textarea>
+            <textarea id="answer-description" v-model="quizAnswer.description" rows="4"
+              placeholder="Short bio or background"></textarea>
           </div>
 
           <!-- Extra Sections -->
           <div class="answer-sections">
             <h4>Extra Sections</h4>
-            <div
-              v-for="(section, sIndex) in quizAnswer.sections"
-              :key="sIndex"
-              class="answer-section-group"
-            >
+            <div v-for="(section, sIndex) in quizAnswer.sections" :key="sIndex" class="answer-section-group">
               <!-- Remove Section Button -->
-              <button
-                v-if="quizAnswer.sections.length > 1"
-                type="button"
-                class="remove-section-btn"
-                @click="removeAnswerSection(sIndex)"
-                title="Remove Section"
-              >
+              <button v-if="quizAnswer.sections.length > 1" type="button" class="remove-section-btn"
+                @click="removeAnswerSection(sIndex)" title="Remove Section">
                 &times;
               </button>
 
               <div class="form-group">
                 <label>Section Title</label>
-                <input
-                  type="text"
-                  v-model="section.title"
-                  placeholder="e.g. Key Innovations"
-                  required
-                />
+                <input type="text" v-model="section.title" placeholder="e.g. Key Innovations" required />
               </div>
 
               <!-- Select between Bullet Points or Brief Description -->
@@ -205,32 +138,15 @@
 
               <!-- Bullet Points Input -->
               <div v-if="section.inputType === 'bullet'" class="bullet-points">
-                <div
-                  v-for="(bullet, bIndex) in section.bulletPoints"
-                  :key="bIndex"
-                  class="bullet-point-group"
-                >
-                  <input
-                    type="text"
-                    v-model="section.bulletPoints[bIndex]"
-                    placeholder="Enter bullet point"
-                    class="bullet-input"
-                    required
-                  />
-                  <button
-                    type="button"
-                    class="remove-bullet-btn"
-                    @click="removeBulletPoint(sIndex, bIndex)"
-                    title="Remove Bullet"
-                  >
+                <div v-for="(bullet, bIndex) in section.bulletPoints" :key="bIndex" class="bullet-point-group">
+                  <input type="text" v-model="section.bulletPoints[bIndex]" placeholder="Enter bullet point"
+                    class="bullet-input" required />
+                  <button type="button" class="remove-bullet-btn" @click="removeBulletPoint(sIndex, bIndex)"
+                    title="Remove Bullet">
                     &times;
                   </button>
                 </div>
-                <button
-                  type="button"
-                  class="btn-add-bullet"
-                  @click="addBulletPoint(sIndex)"
-                >
+                <button type="button" class="btn-add-bullet" @click="addBulletPoint(sIndex)">
                   + Add Bullet Point
                 </button>
               </div>
@@ -238,19 +154,11 @@
               <!-- Brief Description Input -->
               <div v-if="section.inputType === 'description'" class="form-group">
                 <label>Section Content</label>
-                <textarea
-                  v-model="section.description"
-                  rows="3"
-                  placeholder="Add a brief description"
-                ></textarea>
+                <textarea v-model="section.description" rows="3" placeholder="Add a brief description"></textarea>
               </div>
             </div>
             <!-- Add Extra Section Button -->
-            <button
-              type="button"
-              class="btn-add-section"
-              @click="addAnswerSection"
-            >
+            <button type="button" class="btn-add-section" @click="addAnswerSection">
               + Add Section
             </button>
           </div>
@@ -272,6 +180,7 @@ const quiz = ref({
   quiz_description: '',
   quiz_difficulty: 'easy',
   quiz_duration: null,
+  quiz_points: 0,
   quiz_question: ''
 })
 
@@ -375,16 +284,16 @@ async function submitQuiz() {
     description: quizAnswer.value.description,
     sections: quizAnswer.value.sections
   }
-  
+
   // Append FormData fields – note: keys must match what your backend expects.
   formData.append('quiz_data', JSON.stringify(quizData))
   formData.append('quiz_answer', JSON.stringify(quizResults))
-  
+
   // Append file if selected (key 'result_photo' must match backend code)
   if (quizAnswer.value.photoFile) {
     formData.append('result_photo', quizAnswer.value.photoFile)
   }
-  
+
   // For demonstration, we set these fields (change as needed)
   formData.append('participants_ids', JSON.stringify([]))
   formData.append('participants_count', 0)
@@ -397,16 +306,16 @@ async function submitQuiz() {
     )
 
     console.log('Response:', response.data)
-    if(response.data){
-      if(response.data.message == "Unauthorized"){
+    if (response.data) {
+      if (response.data.message == "Unauthorized") {
         alert("Session expired. Please login again.")
         // window.location.href = "/login"
       } else {
-         window.location.href = "/dashboard"
+        window.location.href = "/dashboard"
         alert('Quiz created successfully!')
       }
     }
-   
+
   } catch (error) {
     console.error('Error submitting quiz:', error)
     alert('Error submitting quiz. Check console for details.')
@@ -457,7 +366,7 @@ header h1 {
   background: #fff;
   padding: 30px;
   border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   margin-bottom: 30px;
 }
 
@@ -643,11 +552,13 @@ input[type="file"] {
   display: inline-block;
   margin-top: 10px;
 }
+
 .photo-preview img {
   max-width: 200px;
   border-radius: 6px;
   border: 1px solid #ccc;
 }
+
 .remove-photo-btn {
   position: absolute;
   top: 5px;
@@ -723,11 +634,13 @@ input[type="file"] {
 .bullet-points {
   margin-top: 10px;
 }
+
 .bullet-point-group {
   display: flex;
   align-items: center;
   margin-bottom: 8px;
 }
+
 .bullet-point-group input[type="text"] {
   flex: 1;
   margin-right: 8px;
@@ -735,6 +648,7 @@ input[type="file"] {
   font-size: 16px;
   min-height: 42px;
 }
+
 .remove-bullet-btn {
   background: #dc3545;
   color: #fff;
@@ -754,6 +668,7 @@ input[type="file"] {
 .remove-bullet-btn:hover {
   background: #c82333;
 }
+
 .btn-add-bullet {
   background: #ffc107;
   color: #333;
@@ -766,6 +681,7 @@ input[type="file"] {
   margin-top: 5px;
   display: inline-block;
 }
+
 .btn-add-bullet:hover {
   background: #e0a800;
   transform: translateY(-2px);
@@ -784,6 +700,7 @@ input[type="file"] {
   margin-top: 10px;
   display: inline-block;
 }
+
 .btn-add-section:hover {
   background: #138496;
   transform: translateY(-2px);
@@ -802,6 +719,7 @@ input[type="file"] {
   margin-top: 20px;
   display: inline-block;
 }
+
 .btn-submit:hover {
   background: #0056b3;
 }
@@ -811,16 +729,20 @@ input[type="file"] {
   .container {
     padding: 15px;
   }
+
   header,
   .card {
     padding: 15px;
   }
+
   header h1 {
     font-size: 20px;
   }
+
   .card h2 {
     font-size: 20px;
   }
+
   .btn-add,
   .btn-submit,
   .btn-add-bullet,
@@ -828,6 +750,7 @@ input[type="file"] {
     font-size: 14px;
     padding: 10px 16px;
   }
+
   .remove-clue-btn,
   .remove-section-btn,
   .remove-bullet-btn,
