@@ -10,11 +10,13 @@
             <div v-else class="quiz-list">
                 <div v-for="quiz in quizzes" :key="quiz.id" class="quiz-item" @click="openQuizDetails(quiz.id)">
                     <div class="quiz-header">
-                        <h3>{{ editableQuizData.quiz_title }}</h3>
+                        <h3>{{ getQuizTitle(quiz) }}</h3>
                         <span class="quiz-date">{{ formatDate(quiz.created_at) }}</span>
                     </div>
                     <div class="quiz-info">
                         <p>Participants: {{ quiz.participants_count }}</p>
+                        <p>Quiz ID: {{ quiz.id }}</p>
+
                     </div>
                     <div class="quiz-actions">
                         <button @click.stop="editQuiz(quiz)" class="action-btn edit">
@@ -441,7 +443,22 @@ const chartOptions = ref({
         title: { display: true, text: 'Win/Loss Ratio' }
     }
 })
-
+// Add this function to your script section
+const getQuizTitle = (quiz) => {
+    if (quiz.quiz_data) {
+        try {
+            // Try to parse quiz_data if it's a string
+            const parsedData = typeof quiz.quiz_data === 'string' 
+                ? JSON.parse(quiz.quiz_data) 
+                : quiz.quiz_data;
+            return parsedData.quiz_title || 'Untitled Quiz';
+        } catch (e) {
+            return 'Untitled Quiz';
+        }
+    }
+    // If quiz has a direct title property
+    return quiz.title || quiz.quiz_title || 'Untitled Quiz';
+}
 // Fetch quizzes from the API
 const fetchQuizzes = async () => {
     loading.value = true
