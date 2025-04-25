@@ -10,7 +10,7 @@
             <div v-else class="quiz-list">
                 <div v-for="quiz in quizzes" :key="quiz.id" class="quiz-item" @click="openQuizDetails(quiz.id)">
                     <div class="quiz-header">
-                        <h3>{{ quiz.quiz_title }}</h3>
+                        <h3>{{ editableQuizData.quiz_title }}</h3>
                         <span class="quiz-date">{{ formatDate(quiz.created_at) }}</span>
                     </div>
                     <div class="quiz-info">
