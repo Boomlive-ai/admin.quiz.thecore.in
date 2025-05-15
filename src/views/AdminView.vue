@@ -992,6 +992,9 @@ h1 {
     padding: 20px;
     transition: transform 0.3s, box-shadow 0.3s;
     cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
 }
 
 .quiz-item:hover {
