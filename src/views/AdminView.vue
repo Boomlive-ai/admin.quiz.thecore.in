@@ -11,12 +11,12 @@
                 <div v-for="quiz in quizzes" :key="quiz.id" class="quiz-item" @click="openQuizDetails(quiz.id)">
                     <div class="quiz-header">
                         <h3>{{ getQuizTitle(quiz) }}</h3>
-                        <span class="quiz-date">{{ formatDate(quiz.created_at) }}</span>
+                        <!-- <span class="quiz-date">{{ formatDate(quiz.created_at) }}</span> -->
                     </div>
                     <div class="quiz-info">
                         <p>Participants: {{ quiz.participants_count }}</p>
                         <p>Quiz ID: {{ quiz.id }}</p>
-
+                        <p>{{ formatDate(quiz.created_at) }}</p>   
                     </div>
                     <div class="quiz-actions">
                         <button @click.stop="editQuiz(quiz)" class="action-btn edit">
