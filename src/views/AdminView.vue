@@ -16,7 +16,7 @@
                     <div class="quiz-info">
                         <p>Participants: {{ quiz.participants_count }}</p>
                         <p>Quiz ID: {{ quiz.id }}</p>
-                        <p>{{ formatDate(quiz.created_at) }}</p>   
+                        <p>{{ formatDate(quiz.created_at) }}</p>
                     </div>
                     <div class="quiz-actions">
                         <button @click.stop="editQuiz(quiz)" class="action-btn edit">
@@ -164,7 +164,35 @@
                                     class="form-control" rows="3"></textarea>
                             </div>
                         </div>
+                        <!-- Answer Keywords Section -->
+                        <div class="form-section">
+                            <h3>Answer Keywords <span class="keyword-counter">({{ editableQuizData.answer_keywords ?
+                                editableQuizData.answer_keywords.length : 0 }})</span></h3>
+                            <p class="keywords-description">Add keywords that will be used to check if the user's answer
+                                is correct. Users typing any of these keywords will be marked correct.</p>
 
+                            <div class="keywords-wrapper">
+                                <div v-if="!editableQuizData.answer_keywords || editableQuizData.answer_keywords.length === 0"
+                                    class="no-items-message">
+                                    No keywords added yet.
+                                </div>
+                                <div v-for="(keyword, index) in editableQuizData.answer_keywords" :key="index"
+                                    class="keyword-group">
+                                    <button v-if="editableQuizData.answer_keywords.length > 1" type="button"
+                                        class="remove-keyword-btn" @click="removeKeyword(index)" title="Remove Keyword">
+                                        ×
+                                    </button>
+                                    <div class="form-group">
+                                        <input type="text" v-model="editableQuizData.answer_keywords[index]"
+                                            placeholder="Enter answer keyword" class="keyword-input form-control"
+                                            required />
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="button" class="add-btn" @click="addKeyword">
+                                + Add Keyword
+                            </button>
+                        </div>
                         <!-- Clues Section -->
                         <div class="form-section">
                             <h3>Clues</h3>
@@ -412,6 +440,7 @@ const editableQuizData = ref({
     quiz_difficulty: 'easy',
     quiz_duration: null,
     quiz_question: '',
+    answer_keywords: [],
     clues: [],
     quiz_answer: {
         name: '',
@@ -448,8 +477,8 @@ const getQuizTitle = (quiz) => {
     if (quiz.quiz_data) {
         try {
             // Try to parse quiz_data if it's a string
-            const parsedData = typeof quiz.quiz_data === 'string' 
-                ? JSON.parse(quiz.quiz_data) 
+            const parsedData = typeof quiz.quiz_data === 'string'
+                ? JSON.parse(quiz.quiz_data)
                 : quiz.quiz_data;
             return parsedData.quiz_title || 'Untitled Quiz';
         } catch (e) {
@@ -593,21 +622,21 @@ const triggerFileInput = () => {
 const handleFileDrop = (event) => {
     event.preventDefault();
     event.stopPropagation();
-    
+
     if (event.dataTransfer.files && event.dataTransfer.files.length > 0) {
         const file = event.dataTransfer.files[0];
-        
+
         // Check if file is an image
         if (file.type.startsWith('image/')) {
             selectedFile.value = file;
-            
+
             // Create preview
             const reader = new FileReader();
             reader.onload = (e) => {
                 imagePreview.value = e.target.result;
             };
             reader.readAsDataURL(file);
-            
+
             // Clear current photo URL
             currentPhotoUrl.value = '';
         } else {
@@ -622,14 +651,14 @@ const handleFileChange = (event) => {
     if (file) {
         if (file.type.startsWith('image/')) {
             selectedFile.value = file;
-            
+
             // Create preview of the selected image
             const reader = new FileReader();
             reader.onload = (e) => {
                 imagePreview.value = e.target.result;
             };
             reader.readAsDataURL(file);
-            
+
             // Remove the current photo reference if there was one
             currentPhotoUrl.value = '';
         } else {
@@ -653,6 +682,18 @@ const removeImage = () => {
     editableQuizData.value.quiz_answer.photo = '';
 };
 
+// Add a blank keyword input
+const addKeyword = () => {
+  if (!Array.isArray(editableQuizData.value.answer_keywords)) {
+    editableQuizData.value.answer_keywords = []
+  }
+  editableQuizData.value.answer_keywords.push('')
+}
+
+// Remove one by index
+const removeKeyword = (i) => {
+  editableQuizData.value.answer_keywords.splice(i, 1)
+}
 
 // Edit quiz function
 const editQuiz = async (quiz) => {
@@ -718,6 +759,9 @@ const parseQuizDataForEdit = (data) => {
         quiz_duration: data.quiz_duration,
         quiz_question: data.quiz_question || '',
         clues: Array.isArray(data.clues) ? [...data.clues] : [],
+        answer_keywords: Array.isArray(data.answer_keywords)
+            ? [...data.answer_keywords]
+            : [],
         quiz_answer: {
             name: data.quiz_answer?.name || '',
             timeline: data.quiz_answer?.timeline || '',
@@ -727,18 +771,18 @@ const parseQuizDataForEdit = (data) => {
                 ? data.quiz_answer.sections.map(section => {
                     // Determine input type based on content
                     let inputType = 'bullet'; // Default
-                    
+
                     // If description has content and bulletPoints is empty or doesn't exist
-                    if (section.description && section.description.trim() && 
-                        (!Array.isArray(section.bulletPoints) || section.bulletPoints.length === 0 || 
-                         (section.bulletPoints.length === 1 && !section.bulletPoints[0].trim()))) {
+                    if (section.description && section.description.trim() &&
+                        (!Array.isArray(section.bulletPoints) || section.bulletPoints.length === 0 ||
+                            (section.bulletPoints.length === 1 && !section.bulletPoints[0].trim()))) {
                         inputType = 'paragraph';
                     }
                     // If bulletPoints has content
                     else if (Array.isArray(section.bulletPoints) && section.bulletPoints.some(point => point.trim())) {
                         inputType = 'bullet';
                     }
-                    
+
                     return {
                         title: section.title || '',
                         inputType: inputType,
@@ -929,17 +973,17 @@ onMounted(() => {
                 e.stopPropagation();
             }, false);
         });
-        
+
         fileDropArea.addEventListener('dragover', () => {
             fileDropArea.classList.add('file-drag-over');
         }, false);
-        
+
         fileDropArea.addEventListener('dragleave', () => {
             fileDropArea.classList.remove('file-drag-over');
         }, false);
-        
+
         fileDropArea.addEventListener('drop', handleFileDrop, false);
-        
+
         fileDropArea.addEventListener('click', (e) => {
             if (!e.target.closest('.remove-image-btn') && !imagePreview.value && !currentPhotoUrl.value) {
                 triggerFileInput();
@@ -1390,6 +1434,7 @@ h1 {
 .info-value {
     color: #555;
 }
+
 /* File Upload Styling */
 .file-upload-group {
     margin-bottom: 24px;
@@ -1514,6 +1559,7 @@ h1 {
     font-size: 20px;
     line-height: 1;
 }
+
 /* Validation Error */
 .validation-error {
     color: #c62828;
@@ -1522,11 +1568,63 @@ h1 {
     border-radius: 4px;
     margin-top: 10px;
 }
+
 .file-drag-over {
     border-color: #004d40;
     background-color: #e0f2f1;
     box-shadow: 0 0 10px rgba(0, 77, 64, 0.2);
 }
+/* Answer-Keywords Section */
+.keywords-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.keyword-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.keyword-input {
+  flex: 1;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+.remove-keyword-btn {
+  background: #ef5350;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}
+.remove-keyword-btn:hover {
+  background: #d32f2f;
+}
+.keyword-counter {
+  font-size: 14px;
+  font-weight: 500;
+  color: #004d40;
+}
+.add-btn {
+  background-color: #26a69a;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 12px;
+  font-size: 14px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+.add-btn:hover {
+  background-color: #00897b;
+}
+
 /* Responsive Tweaks */
 @media (min-width: 768px) {
     .modal-content {

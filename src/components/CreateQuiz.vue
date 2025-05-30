@@ -43,7 +43,27 @@
           <input type="text" id="quiz-question" v-model="quiz.quiz_question" placeholder="Enter the quiz question"
             required />
         </div>
-
+        <!-- Answer Keywords Section -->
+        <div class="keywords-container">
+          <h3>Answer Keywords <span class="keyword-counter">({{ answerKeywords.length }})</span></h3>
+          <p class="keywords-description">Add keywords that will be used to check if the user's answer is correct. Users
+            typing any of these keywords will be marked correct.</p>
+          <div id="keywords-wrapper">
+            <div v-for="(keyword, index) in answerKeywords" :key="index" class="keyword-group">
+              <button v-if="answerKeywords.length > 1" type="button" class="remove-keyword-btn"
+                @click="removeKeyword(index)" title="Remove Keyword">
+                &times;
+              </button>
+              <div class="form-group">
+                <input type="text" v-model="answerKeywords[index]" placeholder="Enter answer keyword"
+                  class="keyword-input" required />
+              </div>
+            </div>
+          </div>
+          <button type="button" class="btn-add" @click="addKeyword">
+            + Add Keyword
+          </button>
+        </div>
         <!-- Clues Section -->
         <div class="clues-container">
           <h3>Clues <span class="clue-counter">({{ clues.length }}/6)</span></h3>
@@ -186,6 +206,7 @@ const quiz = ref({
 
 // Reactive clues array with an initial clue
 const clues = ref([{ title: '', text: '' }])
+const answerKeywords = ref([''])
 
 // Extended Quiz Answer Object with extra sections
 const quizAnswer = ref({
@@ -203,6 +224,18 @@ const quizAnswer = ref({
     }
   ]
 })
+
+// Add a new keyword
+function addKeyword() {
+  answerKeywords.value.push('')
+}
+
+// Remove a keyword by index
+function removeKeyword(index) {
+  if (answerKeywords.value.length > 1) {
+    answerKeywords.value.splice(index, 1)
+  }
+}
 
 // Add a new clue
 function addClue() {
@@ -270,11 +303,13 @@ function removeBulletPoint(sectionIndex, bulletIndex) {
 async function submitQuiz() {
   // Build the FormData payload
   const formData = new FormData()
+  const filteredKeywords = answerKeywords.value.filter(keyword => keyword.trim() !== '')
 
   // Example: Combine quiz and clues into one JSON string
   const quizData = {
     ...quiz.value,
-    clues: clues.value
+    clues: clues.value,
+    answer_keywords: filteredKeywords
   }
   // Combine answer details (except file) into one JSON string  
   // (If you wish, you may separate fields differently in your backend)
@@ -409,6 +444,69 @@ form {
 .form-group select:focus {
   border-color: #007bff;
   outline: none;
+}
+
+/* Keywords Section */
+.keywords-container {
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+.keywords-container h3 {
+  margin-bottom: 10px;
+  font-size: 20px;
+  font-weight: 600;
+  color: #333;
+}
+
+.keyword-counter {
+  font-size: 16px;
+  color: #666;
+  font-weight: normal;
+}
+
+.keywords-description {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 15px;
+  font-style: italic;
+}
+
+.keyword-group {
+  background: #f0f8ff;
+  padding: 15px;
+  border-radius: 6px;
+  margin-bottom: 10px;
+  position: relative;
+  border: 1px solid #b3d9ff;
+}
+
+.keyword-input {
+  font-weight: 500;
+  background: #fff;
+}
+
+.remove-keyword-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: #dc3545;
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.3s ease;
+}
+
+.remove-keyword-btn:hover {
+  background: #c82333;
 }
 
 /* Clues Section */
@@ -754,7 +852,8 @@ input[type="file"] {
   .remove-clue-btn,
   .remove-section-btn,
   .remove-bullet-btn,
-  .remove-photo-btn {
+  .remove-photo-btn,
+  .remove-keyword-btn {
     width: 20px;
     height: 20px;
     font-size: 14px;
